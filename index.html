@@ -121,15 +121,14 @@
 function formatNicknames(text) {
   return text
     .replace(/[(),0-9-]/g, '') // ✅ (, ) , 숫자, - 제거
-    .replace(/\u00A0/g, ' ')   // 특수 공백
-    .replace(/\t/g, ' ')       // 탭
-    .replace(/\n/g, ' ')       // 엔터
-    .split(' ')                // 공백 기준
+    .replace(/\u00A0/g, ' ')  // 특수 공백
+    .replace(/\t/g, ' ')      // ✅ 탭
+    .replace(/\n/g, ' ')      // 엔터
+    .split(' ')               // 공백 기준
     .map(v => v.trim())
     .filter(v => v !== '')
     .join(', ');
 }
-</script>
 
 
   input.addEventListener('input', () => {
