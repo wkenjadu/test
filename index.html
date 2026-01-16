@@ -120,15 +120,14 @@
 
 function formatNicknames(text) {
   return text
-    .replace(/[(),0-9-]/g, '') // ✅ (, ) , 숫자, - 제거
-    .replace(/\u00A0/g, ' ')  // 특수 공백
-    .replace(/\t/g, ' ')      // ✅ 탭
-    .replace(/\n/g, ' ')      // 엔터
-    .split(' ')               // 공백 기준
-    .map(v => v.trim())
+    .replace(/[(),0-9-]/g, '')   // (, ) , 숫자, - 제거
+    .replace(/\u00A0/g, ' ')     // 특수 공백
+    .trim()
+    .split(/\s+/)                // ✅ 모든 공백(스페이스/탭/엔터) 기준 분리
     .filter(v => v !== '')
-    .join(', ');
+    .join(', ');                 // ✅ 여기서 쉼표 다시 추가
 }
+
 
 
   input.addEventListener('input', () => {
