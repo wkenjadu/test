@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>쉼표 자동 생성</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f7fa;
+      color: #111827;
+      padding: 24px;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+    p {
+      color: #555;
+      margin-bottom: 16px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      font-size: 1rem;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    .output {
+      margin-top: 20px;
+    }
+    .output textarea {
+      background: #f9fafb;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    /* 🌙 다크모드 */
+    body.dark {
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    body.dark .container {
+      background: #020617;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    body.dark p {
+      color: #cbd5f5;
+    }
+    body.dark textarea {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+    }
+    body.dark .output textarea {
+      background: #020617;
+    }
+    body.dark button,
+    body.dark a {
+      background: #38bdf8;
+      color: #020617;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h1>쉼표 자동 생성</h1>
+      <button id="darkToggle">🌙 다크모드</button>
+    </div>
+
+    <p>닉네임을 입력하면 <strong>공백 또는 줄바꿈</strong> 기준으로 자동으로 쉼표(,)가 들어갑니다.</p>
+
+    <textarea id="input" placeholder="닉네임을 입력하세요"></textarea>
+
+    <div class="output">
+      <p><strong>결과</strong></p>
+      <textarea id="output" readonly></textarea>
+
+      <button id="copyBtn" style="margin-top:10px;">📋 클립보드 복사</button>
+      <span id="status" style="margin-left:10px;color:#16a34a;display:none;">
+        복사됨!
+      </span>
+    </div>
+
+    <hr style="margin:24px 0;">
+
+    <p><strong>🎯 룰렛 사이트 바로가기</strong></p>
+    <a id="rouletteLink"
+       href="https://lazygyu.github.io/roulette/"
+       target="_blank"
+       style="display:inline-block;margin-top:8px;padding:10px 16px;border-radius:12px;text-decoration:none;">
+      룰렛 사이트 열기
+    </a>
+  </div>
+
+<script>
+  const input = document.getElementById('input');
+  const output = document.getElementById('output');
+  const copyBtn = document.getElementById('copyBtn');
+  const status = document.getElementById('status');
+  const darkToggle = document.getElementById('darkToggle');
+
+<script>
+function formatNicknames(text) {
+  return text
+    .replace(/[(),0-9-]/g, '') // ✅ (, ) , 숫자, - 제거
+    .replace(/\u00A0/g, ' ')   // 특수 공백
+    .replace(/\t/g, ' ')       // 탭
+    .replace(/\n/g, ' ')       // 엔터
+    .split(' ')                // 공백 기준
+    .map(v => v.trim())
+    .filter(v => v !== '')
+    .join(', ');
+}
+</script>
+
+
+  input.addEventListener('input', () => {
+    output.value = formatNicknames(input.value);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (!output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      status.style.display = 'inline';
+      setTimeout(() => status.style.display = 'none', 1500);
+    });
+  });
+
+  // 🌙 다크모드 토글
+  darkToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    darkToggle.textContent = document.body.classList.contains('dark')
+      ? '☀️ 라이트모드'
+      : '🌙 다크모드';
+  });
+</script>
+</body>
+</html>
+
+여기에서 (,),숫자,- 이건 제외해줄수 있어?
