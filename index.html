@@ -5,26 +5,28 @@
   <title>쉼표 자동 생성</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    /* 기본 배경을 어두운 색으로 지정하여 로딩 시 눈부심 방지 */
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f7fa;
-      color: #111827;
+      background: #0f172a; 
+      color: #e5e7eb;
       padding: 24px;
+      transition: background 0.3s, color 0.3s;
     }
     .container {
       max-width: 720px;
       margin: 0 auto;
-      background: #fff;
+      background: #020617;
       padding: 24px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     }
     h1 {
       font-size: 1.5rem;
       margin-bottom: 12px;
     }
     p {
-      color: #555;
+      color: #cbd5f5;
       margin-bottom: 16px;
     }
     textarea {
@@ -33,49 +35,51 @@
       font-size: 1rem;
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid #ccc;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
       resize: vertical;
     }
     .output {
       margin-top: 20px;
     }
     .output textarea {
-      background: #f9fafb;
+      background: #020617;
     }
-    button {
+    button, .link-btn {
       padding: 10px 16px;
       border: none;
       border-radius: 10px;
-      background: #2563eb;
-      color: white;
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    /* 🌙 다크모드 */
-    body.dark {
-      background: #0f172a;
-      color: #e5e7eb;
-    }
-    body.dark .container {
-      background: #020617;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    }
-    body.dark p {
-      color: #cbd5f5;
-    }
-    body.dark textarea {
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-    }
-    body.dark .output textarea {
-      background: #020617;
-    }
-    body.dark button,
-    body.dark a {
       background: #38bdf8;
       color: #020617;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    /* ☀️ 라이트모드 스타일 (역전) */
+    body.light {
+      background: #f5f7fa;
+      color: #111827;
+    }
+    body.light .container {
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    body.light p {
+      color: #555;
+    }
+    body.light textarea {
+      background: #fff;
+      color: #111827;
+      border: 1px solid #ccc;
+    }
+    body.light button, 
+    body.light .link-btn {
+      background: #2563eb;
+      color: white;
     }
   </style>
 </head>
@@ -83,7 +87,7 @@
   <div class="container">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <h1>쉼표 자동 생성</h1>
-      <button id="darkToggle">🌙 다크모드</button>
+      <button id="modeToggle">☀️ 라이트모드</button>
     </div>
 
     <p>닉네임을 입력하면 <strong>공백 또는 줄바꿈</strong> 기준으로 자동으로 쉼표(,)가 들어갑니다.</p>
@@ -94,19 +98,18 @@
       <p><strong>결과</strong></p>
       <textarea id="output" readonly></textarea>
 
-      <button id="copyBtn" style="margin-top:10px;">📋 클립보드 복사</button>
-      <span id="status" style="margin-left:10px;color:#16a34a;display:none;">
-        복사됨!
-      </span>
+      <div style="margin-top:10px;">
+        <button id="copyBtn">📋 클립보드 복사</button>
+        <span id="status" style="margin-left:10px;color:#22c55e;display:none;font-weight:bold;">
+          복사됨!
+        </span>
+      </div>
     </div>
 
-    <hr style="margin:24px 0;">
+    <hr style="margin:24px 0; border: 0; border-top: 1px solid #334155;">
 
     <p><strong>🎯 룰렛 사이트 바로가기</strong></p>
-    <a id="rouletteLink"
-       href="https://lazygyu.github.io/roulette/"
-       target="_blank"
-       style="display:inline-block;margin-top:8px;padding:10px 16px;border-radius:12px;text-decoration:none;">
+    <a href="https://lazygyu.github.io/roulette/" target="_blank" class="link-btn">
       룰렛 사이트 열기
     </a>
   </div>
@@ -116,25 +119,18 @@
   const output = document.getElementById('output');
   const copyBtn = document.getElementById('copyBtn');
   const status = document.getElementById('status');
-  const darkToggle = document.getElementById('darkToggle');
+  const modeToggle = document.getElementById('modeToggle');
 
-function formatNicknames(text) {
-  return text
-    // 1️⃣ 입력에 있는 쉼표도 공백처럼 처리
-    .replace(/,/g, ' ')
-    // 2️⃣ 제거할 문자 제거
-    .replace(/[()0-9-]/g, '')
-    .replace(/\u00A0/g, ' ')
-    .trim()
-    // 3️⃣ 모든 공백 기준 분리
-    .split(/\s+/)
-    .filter(v => v.length > 0)
-    // 4️⃣ 결과에서만 쉼표 생성
-    .join(', ');
-}
-
-
-
+  function formatNicknames(text) {
+    return text
+      .replace(/,/g, ' ')
+      .replace(/[()0-9-]/g, '')
+      .replace(/\u00A0/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(v => v.length > 0)
+      .join(', ');
+  }
 
   input.addEventListener('input', () => {
     output.value = formatNicknames(input.value);
@@ -148,12 +144,10 @@ function formatNicknames(text) {
     });
   });
 
-  // 🌙 다크모드 토글
-  darkToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    darkToggle.textContent = document.body.classList.contains('dark')
-      ? '☀️ 라이트모드'
-      : '🌙 다크모드';
+  // 모드 토글 로직
+  modeToggle.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light');
+    modeToggle.textContent = isLight ? '🌙 다크모드' : '☀️ 라이트모드';
   });
 </script>
 </body>
