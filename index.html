@@ -5,7 +5,6 @@
   <title>쉼표 자동 생성</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* 기본 배경을 어두운 색으로 지정하여 로딩 시 눈부심 방지 */
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0f172a; 
@@ -21,77 +20,46 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 12px;
-    }
-    p {
-      color: #cbd5f5;
-      margin-bottom: 16px;
-    }
+    h1 { font-size: 1.5rem; margin-bottom: 12px; }
+    p { color: #cbd5f5; margin-bottom: 16px; }
     textarea {
-      width: 100%;
-      min-height: 160px;
-      font-size: 1rem;
-      padding: 12px;
-      border-radius: 12px;
-      background: #020617;
-      color: #e5e7eb;
-      border: 1px solid #334155;
-      resize: vertical;
+      width: 100%; min-height: 160px; font-size: 1rem; padding: 12px;
+      border-radius: 12px; background: #020617; color: #e5e7eb;
+      border: 1px solid #334155; resize: vertical;
     }
-    .output {
-      margin-top: 20px;
-    }
-    .output textarea {
-      background: #020617;
-    }
+    .output textarea { background: #020617; }
     button, .link-btn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 10px;
-      background: #38bdf8;
-      color: #020617;
-      font-size: 0.95rem;
-      font-weight: bold;
-      cursor: pointer;
-      text-decoration: none;
+      padding: 10px 16px; border: none; border-radius: 10px;
+      background: #38bdf8; color: #020617; font-size: 0.95rem;
+      font-weight: bold; cursor: pointer; text-decoration: none;
       display: inline-block;
     }
-
-    /* ☀️ 라이트모드 스타일 (역전) */
-    body.light {
-      background: #f5f7fa;
-      color: #111827;
-    }
-    body.light .container {
-      background: #fff;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-    body.light p {
-      color: #555;
-    }
-    body.light textarea {
-      background: #fff;
-      color: #111827;
-      border: 1px solid #ccc;
-    }
-    body.light button, 
-    body.light .link-btn {
-      background: #2563eb;
-      color: white;
-    }
+    body.light { background: #f5f7fa; color: #111827; }
+    body.light .container { background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    body.light p { color: #555; }
+    body.light textarea { background: #fff; color: #111827; border: 1px solid #ccc; }
+    body.light button, body.light .link-btn { background: #2563eb; color: white; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- 로그인 UI -->
+  <div style="max-width:720px;margin:0 auto 20px auto;">
+    <input id="email" placeholder="이메일" style="padding:8px;border-radius:8px;">
+    <input id="password" type="password" placeholder="비밀번호" style="padding:8px;border-radius:8px;">
+    <button onclick="signUp()">회원가입</button>
+    <button onclick="login()">로그인</button>
+    <button onclick="logout()">로그아웃</button>
+    <span id="userStatus" style="margin-left:10px;font-weight:bold;"></span>
+  </div>
+
+  <!-- 쉼표 생성 UI -->
+  <div class="container" id="mainContainer" style="display:none;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
       <h1>쉼표 자동 생성</h1>
       <button id="modeToggle">☀️ 라이트모드</button>
     </div>
 
     <p>닉네임을 입력하면 <strong>공백 또는 줄바꿈</strong> 기준으로 자동으로 쉼표(,)가 들어갑니다.</p>
-
     <textarea id="input" placeholder="닉네임을 입력하세요"></textarea>
 
     <div class="output">
@@ -100,55 +68,103 @@
 
       <div style="margin-top:10px;">
         <button id="copyBtn">📋 클립보드 복사</button>
-        <span id="status" style="margin-left:10px;color:#22c55e;display:none;font-weight:bold;">
-          복사됨!
-        </span>
+        <span id="status" style="margin-left:10px;color:#22c55e;display:none;font-weight:bold;">복사됨!</span>
       </div>
     </div>
 
     <hr style="margin:24px 0; border: 0; border-top: 1px solid #334155;">
 
     <p><strong>🎯 룰렛 사이트 바로가기</strong></p>
-    <a href="https://lazygyu.github.io/roulette/" target="_blank" class="link-btn">
-      룰렛 사이트 열기
-    </a>
+    <a href="https://lazygyu.github.io/roulette/" target="_blank" class="link-btn">룰렛 사이트 열기</a>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
+  // 🔥 Supabase 키 넣기
+  const supabaseUrl = "https://tylorhaqrijahkdcnees.supabase.co";
+  const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_GYyBsNxC";
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
   const input = document.getElementById('input');
   const output = document.getElementById('output');
   const copyBtn = document.getElementById('copyBtn');
   const status = document.getElementById('status');
   const modeToggle = document.getElementById('modeToggle');
+  const mainContainer = document.getElementById('mainContainer');
+  const userStatus = document.getElementById('userStatus');
 
-  function formatNicknames(text) {
-    return text
-      .replace(/,/g, ' ')
-      .replace(/[()0-9-]/g, '')
-      .replace(/\u00A0/g, ' ')
-      .trim()
-      .split(/\s+/)
-      .filter(v => v.length > 0)
-      .join(', ');
+  // 회원가입
+  async function signUp() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const { error } = await supabase.auth.signUp({ email, password });
+    if(error) alert(error.message);
+    else alert("회원가입 성공!");
   }
 
-  input.addEventListener('input', () => {
-    output.value = formatNicknames(input.value);
-  });
+  // 로그인
+  async function login() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) alert(error.message);
+    else {
+      alert("로그인 성공!");
+      checkUser(true);
+    }
+  }
 
+  // 로그아웃
+  async function logout() {
+    await supabase.auth.signOut();
+    checkUser(false);
+    alert("로그아웃됨");
+  }
+
+  // 로그인 상태 확인 + UI 변경
+  async function checkUser(redirect = false) {
+    const { data } = await supabase.auth.getUser();
+    if(data.user) {
+      userStatus.textContent = "로그인됨: " + data.user.email;
+      mainContainer.style.display = "block";
+      if(redirect) window.location.href = "#mainContainer"; // 페이지 이동
+    } else {
+      userStatus.textContent = "로그아웃 상태";
+      mainContainer.style.display = "none";
+    }
+  }
+
+  // 쉼표 자동 생성 함수
+  function formatNicknames(text) {
+    return text.replace(/,/g,' ')
+               .replace(/[()0-9-]/g,'')
+               .replace(/\u00A0/g,' ')
+               .trim()
+               .split(/\s+/)
+               .filter(v=>v.length>0)
+               .join(', ');
+  }
+
+  // 입력 이벤트
+  input.addEventListener('input', () => { output.value = formatNicknames(input.value); });
+
+  // 클립보드 복사
   copyBtn.addEventListener('click', () => {
-    if (!output.value) return;
+    if(!output.value) return;
     navigator.clipboard.writeText(output.value).then(() => {
       status.style.display = 'inline';
-      setTimeout(() => status.style.display = 'none', 1500);
+      setTimeout(()=> status.style.display='none',1500);
     });
   });
 
-  // 모드 토글 로직
+  // 모드 토글
   modeToggle.addEventListener('click', () => {
     const isLight = document.body.classList.toggle('light');
     modeToggle.textContent = isLight ? '🌙 다크모드' : '☀️ 라이트모드';
   });
+
+  // 페이지 로딩 시 상태 확인
+  checkUser();
 </script>
 </body>
 </html>
