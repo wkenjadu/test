@@ -59,10 +59,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
-  // Supabase 연결
-const supabaseUrl = "https://tylorhaqrijahkdcnees.supabase.co";
-const supabaseKey = "const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_GYyBsNxC";"; // 반드시 anon key
-  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  // ✅ Supabase 연결
+  const supabaseUrl = "https://tylorhaqrijahkdcnees.supabase.co";
+  const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_GYyBsNxC";
+
+  const { createClient } = supabase;
+  const client = createClient(supabaseUrl, supabaseKey);
 
   const input = document.getElementById('input');
   const output = document.getElementById('output');
@@ -76,39 +78,40 @@ const supabaseKey = "const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_
   async function signUp() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    if(!email || !password) return alert("이메일과 비밀번호를 입력해주세요!");
-    const { error } = await supabase.auth.signUp({ email, password });
+    if(!email || !password) return alert("이메일과 비밀번호 입력");
+
+    const { error } = await client.auth.signUp({ email, password });
     if(error) alert(error.message);
-    else alert("회원가입 성공! 이메일 확인 후 로그인해주세요.");
+    else alert("회원가입 성공! 이메일 확인 필요");
   }
 
   // 로그인
   async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    if(!email || !password) return alert("이메일과 비밀번호를 입력해주세요!");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(!email || !password) return alert("이메일과 비밀번호 입력");
+
+    const { error } = await client.auth.signInWithPassword({ email, password });
     if(error) alert(error.message);
     else {
       alert("로그인 성공!");
-      checkUser(true);
+      checkUser();
     }
   }
 
   // 로그아웃
   async function logout() {
-    await supabase.auth.signOut();
-    checkUser(false);
+    await client.auth.signOut();
+    checkUser();
     alert("로그아웃됨");
   }
 
-  // 로그인 상태 확인 + UI 변경
-  async function checkUser(redirect=false) {
-    const { data } = await supabase.auth.getUser();
+  // 로그인 상태 확인
+  async function checkUser() {
+    const { data } = await client.auth.getUser();
     if(data.user) {
       userStatus.textContent = "로그인됨: " + data.user.email;
       mainContainer.style.display = "block";
-      if(redirect) window.location.href = "#mainContainer"; 
     } else {
       userStatus.textContent = "로그아웃 상태";
       mainContainer.style.display = "none";
@@ -117,11 +120,20 @@ const supabaseKey = "const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_
 
   // 쉼표 자동 생성
   function formatNicknames(text) {
-    return text.replace(/,/g,' ').replace(/[()0-9-]/g,'').replace(/\u00A0/g,' ').trim().split(/\s+/).filter(v=>v.length>0).join(', ');
+    return text.replace(/,/g,' ')
+      .replace(/[()0-9-]/g,'')
+      .replace(/\u00A0/g,' ')
+      .trim()
+      .split(/\s+/)
+      .filter(v=>v.length>0)
+      .join(', ');
   }
-  input.addEventListener('input', ()=>{ output.value = formatNicknames(input.value); });
 
-  // 클립보드 복사
+  input.addEventListener('input', ()=>{
+    output.value = formatNicknames(input.value);
+  });
+
+  // 복사
   copyBtn.addEventListener('click', ()=>{
     if(!output.value) return;
     navigator.clipboard.writeText(output.value).then(()=>{
@@ -130,13 +142,13 @@ const supabaseKey = "const supabaseKey = "sb_publishable_1R_1q5jRwaHuXSVUvknPag_
     });
   });
 
-  // 모드 토글
+  // 모드
   modeToggle.addEventListener('click', ()=>{
     const isLight = document.body.classList.toggle('light');
     modeToggle.textContent = isLight ? '🌙 다크모드' : '☀️ 라이트모드';
   });
 
-  // 페이지 로딩 시 상태 확인
+  // 초기 실행
   checkUser();
 </script>
 </body>
