@@ -1,17 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>쉼표 자동 생성</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:#0f172a;
+      color:#e5e7eb;
+      padding:24px;
+    }
+    .container {
+      max-width:720px;
+      margin:0 auto;
+      background:#020617;
+      padding:24px;
+      border-radius:16px;
+    }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#e5e7eb;
+      margin-top:10px;
+    }
+    textarea {
+      min-height:160px;
+      resize:vertical;
+    }
+    button {
+      padding:10px 16px;
+      border:none;
+      border-radius:10px;
+      background:#38bdf8;
+      color:#020617;
+      font-weight:bold;
+      cursor:pointer;
+      margin-top:10px;
+      margin-right:8px;
+    }
+    .top-box {
+      max-width:720px;
+      margin:0 auto 20px;
+    }
+    #errorBox {
+      max-width: 720px;
+      margin: 0 auto 20px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #7f1d1d;
+      color: #fecaca;
+      display: none;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<div id="errorBox"></div>
+
+<div class="top-box">
+  <input id="id" placeholder="아이디">
+  <input id="password" type="password" placeholder="비밀번호">
+  <button type="button" onclick="signUp()">회원가입</button>
+  <button type="button" onclick="login()">로그인</button>
+  <button type="button" onclick="logout()">로그아웃</button>
+  <div id="userStatus" style="margin-top:10px;"></div>
+</div>
+
+<div class="container" id="mainContainer" style="display:none;">
+  <h1>쉼표 자동 생성</h1>
+
+  <textarea id="input" placeholder="닉네임 입력"></textarea>
+
+  <p>결과</p>
+  <textarea id="output" readonly></textarea>
+
+  <button id="copyBtn" type="button">복사</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
 <script>
-const client = new Appwrite.Client()
-  .setEndpoint('https://sgp.cloud.appwrite.io/v1')
-  .setProject('69b9d85a002298560df7');
+function showError(message) {
+  const box = document.getElementById('errorBox');
+  box.style.display = 'block';
+  box.textContent = String(message);
+}
 
-const account = new Appwrite.Account(client);
+window.addEventListener('error', (e) => {
+  showError('JS 오류: ' + e.message);
+});
+
+let client, account;
+
+try {
+  if (!window.Appwrite) {
+    throw new Error('Appwrite 라이브러리를 불러오지 못함');
+  }
+
+  client = new Appwrite.Client()
+    .setEndpoint('https://sgp.cloud.appwrite.io/v1')
+    .setProject('69b9d85a002298560df7');
+
+  account = new Appwrite.Account(client);
+} catch (err) {
+  showError(err.message || err);
+}
 
 const input = document.getElementById('input');
 const output = document.getElementById('output');
 const mainContainer = document.getElementById('mainContainer');
 const userStatus = document.getElementById('userStatus');
+const copyBtn = document.getElementById('copyBtn');
 
-// 회원가입
 async function signUp() {
   const id = document.getElementById("id").value.trim();
   const password = document.getElementById("password").value;
@@ -29,14 +134,13 @@ async function signUp() {
       id
     );
     alert("회원가입 성공!");
-    checkUser();
+    await checkUser();
   } catch (err) {
     console.error("회원가입 오류:", err);
     alert("회원가입 오류: " + (err?.message || JSON.stringify(err)));
   }
 }
 
-// 로그인
 async function login() {
   const id = document.getElementById("id").value.trim();
   const password = document.getElementById("password").value;
@@ -47,19 +151,15 @@ async function login() {
   }
 
   try {
-    await account.createEmailSession(
-      id + "@app.com",
-      password
-    );
+    await account.createEmailSession(id + "@app.com", password);
     alert("로그인 성공!");
-    checkUser();
+    await checkUser();
   } catch (err) {
     console.error("로그인 오류:", err);
     alert("로그인 오류: " + (err?.message || JSON.stringify(err)));
   }
 }
 
-// 로그아웃
 async function logout() {
   try {
     await account.deleteSession('current');
@@ -67,10 +167,9 @@ async function logout() {
     console.error("로그아웃 오류:", err);
     alert("로그아웃 오류: " + (err?.message || JSON.stringify(err)));
   }
-  checkUser();
+  await checkUser();
 }
 
-// 로그인 상태 확인
 async function checkUser() {
   try {
     const user = await account.get();
@@ -82,11 +181,12 @@ async function checkUser() {
   }
 }
 
-// 쉼표 기능
 function formatNicknames(text) {
-  return text.replace(/,/g, ' ')
-    .replace(/[()0-9-]/g, '')
-    .trim()
+  return text
+    .replace(/\u00A0/g, ' ')
+    .replace(/\t/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/,/g, ' ')
     .split(/\s+/)
     .filter(v => v.length > 0)
     .join(', ');
@@ -96,20 +196,21 @@ input.addEventListener('input', () => {
   output.value = formatNicknames(input.value);
 });
 
-// 복사
-document.getElementById('copyBtn').addEventListener('click', async () => {
+copyBtn.addEventListener('click', async () => {
   if (!output.value) return;
 
   try {
     await navigator.clipboard.writeText(output.value);
     alert("복사됨!");
-  } catch (e) {
+  } catch (err) {
     output.select();
     document.execCommand('copy');
     alert("복사됨!");
   }
 });
 
-// 시작
 checkUser();
 </script>
+
+</body>
+</html>
